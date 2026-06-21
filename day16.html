@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Day 16 - Searchable To-Do Pro</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #f0f2f5;
+      padding: 50px;
+    }
+
+ .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 25px;
+    }
+
+ .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    #taskInput {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    #addBtn {
+      padding: 12px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #addBtn:hover {
+      background: #45a049;
+    }
+
+    #searchInput {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+    }
+
+    #taskInput:focus, #searchInput:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+
+    #taskList {
+      list-style: none;
+      padding: 0;
+    }
+
+    #taskList li {
+      padding: 12px;
+      background: #f9f9f9;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-left: 4px solid #4CAF50;
+    }
+
+    #taskList li.done {
+      text-decoration: line-through;
+      color: #888;
+      border-left-color: #999;
+      background: #eee;
+    }
+
+ .task-text {
+      flex: 1;
+      cursor: pointer;
+    }
+
+ .deleteBtn {
+      background: #ff4444;
+      color: #ffffff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+ .deleteBtn:hover {
+      background: #cc0000;
+    }
+
+ .no-result {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📝 Day 16 - Searchable To-Do Pro 💾</h2>
+    <div class="input-group">
+      <input type="text" id="taskInput" placeholder="Enter the new task...">
+      <button id="addBtn">Add</button>
+    </div>
+    <input type="text" id="searchInput" placeholder="Search the task...">
+    <ul id="taskList"></ul>
+    <p id="noResult" class="no-result">😕 Task not found</p>
+  </div>
+
+  <script>
+    let taskInput = document.getElementById("taskInput");
+    let addBtn = document.getElementById("addBtn");
+    let searchInput = document.getElementById("searchInput");
+    let taskList = document.getElementById("taskList");
+    let noResult = document.getElementById("noResult");
+
+    document.addEventListener("DOMContentLoaded", loadTasks);
+
+    addBtn.addEventListener("click", addTask);
+    taskInput.addEventListener("keyup", function(event) {
+      if (event.key === "Enter") addTask();
+    });
+
+    function addTask() {
+      let taskText = taskInput.value.trim();
+      if (taskText === "") return;
+      
+      createTaskElement(taskText, false); 
+      saveTasks(); 
+      
+      taskInput.value = "";
+      filterTasks();
+    }
+
+    function createTaskElement(text, isDone) {
+      let li = document.createElement("li");
+      if (isDone) li.classList.add("done");
+      
+      let span = document.createElement("span");
+      span.textContent = text;
+      span.className = "task-text";
+      span.onclick = function() {
+        li.classList.toggle("done");
+        saveTasks(); 
+      };
+      
+      let delBtn = document.createElement("button");
+      delBtn.textContent = "Delete";
+      delBtn.className = "deleteBtn";
+      delBtn.onclick = function() {
+        li.remove();
+        saveTasks(); 
+        filterTasks();
+      };
+      
+      li.appendChild(span);
+      li.appendChild(delBtn);
+      taskList.appendChild(li);
+    }
+
+    function saveTasks() {
+      let tasks = [];
+      let items = taskList.querySelectorAll("li");
+      items.forEach(item => {
+        tasks.push({
+          text: item.querySelector(".task-text").textContent,
+          done: item.classList.contains("done")
+        });
+      });
+      localStorage.setItem("day16Tasks", JSON.stringify(tasks));
+    }
+    function loadTasks() {
+      let saved = localStorage.getItem("day16Tasks");
+      if (saved) {
+        let tasks = JSON.parse(saved);
+        tasks.forEach(task => {
+          createTaskElement(task.text, task.done);
+        });
+      }
+    }
+
+    searchInput.addEventListener("keyup", filterTasks);
+
+    function filterTasks() {
+      let filter = searchInput.value.toLowerCase();
+      let items = taskList.getElementsByTagName("li");
+      let visibleCount = 0;
+      
+      for (let i = 0; i < items.length; i++) {
+        let itemText = items[i].querySelector(".task-text").textContent.toLowerCase();
+        
+        if (itemText.includes(filter)) {
+          items[i].style.display = "flex";
+          visibleCount++;
+        } else {
+          items[i].style.display = "none";
+        }
+      }
+      noResult.style.display = visibleCount === 0 && items.length > 0? "block" : "none";
+    }
+  </script>
+</body>
+</html>
